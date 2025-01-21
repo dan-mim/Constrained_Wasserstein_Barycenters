@@ -1,0 +1,49 @@
+"""
+NB: Dans dataset_40, height=40 (l'images est en 40 x 40) , dans dataset_100, height=100.
+La projection sur stock_max c'est une troncature:
+        if stock_max:
+            Istock = p > stock_max
+            p[Istock] = stock_max
+, la projection sur stock_min c'est 
+        if stock_min:
+            I1 = p < 1/2 * stock_min
+            p[I1] = 0
+            for r in range(R):
+                if p[r] >=1/2 * stock_min and p[r]<stock_min:
+                    p[r] = stock_min
+"""
+stock_max, stock_min = .009, .004
+stock_max = stock_max / height * 40
+stock_min = stock_min / height * 40
+
+def project_onto_stock(im):
+    # Extract the height and width of the input image
+    height, width = im.shape
+
+    # Define the same rectangles as in the generate_black_rectangles_image function
+    rectangle_size1 = width // 10
+    rectangle_size2 = [height // 9, height // 5]
+    liste_x0s = [3 * width // 4, width // 4, 7 * width // 10, 6 * width // 11, width - rectangle_size1 - 10, rectangle_size1, 2 * width // 9, width - rectangle_size1 - 5]
+    list_y0s = [height // 9, height // 2, 7 * height // 12, 3 * height // 4, 8 * height // 13, 3 * height // 4, height - rectangle_size2[0] - 5, height - rectangle_size2[0] - 5]
+    num_squares = len(list_y0s)
+
+    # Create an empty mask (initially all zeros)
+    mask = np.zeros((height, width), dtype=np.uint8)
+
+    # Loop through each rectangle and create the mask
+    for i in range(num_squares):
+        j = 0
+        if i == 0:
+            j = 1
+        rectangle_size = rectangle_size1, rectangle_size2[j]
+        x0 = liste_x0s[i]
+        y0 = list_y0s[i]
+        x1, y1 = x0 + rectangle_size[0], y0 + rectangle_size[1]
+
+        # Set the pixels inside the rectangle to 1
+        mask[y0:y1, x0:x1] = 1
+
+    # Multiply the original image by the mask
+    result_image = im * mask
+
+    return result_image
